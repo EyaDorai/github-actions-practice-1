@@ -1,4 +1,4 @@
-# Practice 3: Event Filters
+**# Practice 3: Event Filters
 
 Create a workflow that only runs on specific branches and ignores documentation changes to optimize CI/CD performance.
 
@@ -94,3 +94,4 @@ paths-ignore:
 - Reduces unnecessary CI/CD runs
 - Saves compute resources and costs
 - Decreases notification noise for teams
+**

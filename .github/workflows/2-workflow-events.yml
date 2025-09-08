@@ -1,0 +1,33 @@
+<<<<<<< HEAD
+name: Workflow Events
+on:
+
+jobs:
+=======
+# Event Name Detector Workflow
+# This workflow demonstrates handling multiple GitHub events
+# and shows which event triggered the workflow execution
+
+name: Event Name Detector
+
+# Define the events that will trigger this workflow
+on:
+  # Manual trigger - allows running the workflow from GitHub UI
+  workflow_dispatch:
+  
+  # Trigger on push to any branch
+  push:
+  
+  # Trigger on pull request events (opened, synchronize, reopened, closed)
+  pull_request:
+
+jobs:
+  echo:
+    # Use Ubuntu latest runner
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Step to display which event triggered the workflow
+      - name: Display Trigger Name
+        run: echo "I've been triggered by ${{ github.event_name }} event"
+>>>>>>> b27295a5f8f91095f3e4a211238f20409ac21c54

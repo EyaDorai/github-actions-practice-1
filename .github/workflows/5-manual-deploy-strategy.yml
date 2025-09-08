@@ -1,0 +1,202 @@
+name: Manual Deployment Controller
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Choose target environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+          - development
+      version:
+        description: 'Version or tag to deploy (e.g., v1.2.3)'
+        required: true
+        default: 'latest'
+        type: string
+      skip_tests:
+        description: 'Skip testing phase (use with caution)'
+        required: false
+        default: false
+        type: boolean
+      strategy:
+        description: 'Deployment strategy'
+        required: true
+        default: 'rolling'
+        type: choice
+        options:
+          - rolling
+          - blue-green
+          - canary
+      notification_channel:
+        description: 'Slack channel for notifications (optional)'
+        required: false
+        default: '#deployments'
+        type: string
+
+jobs:
+  validate-inputs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Display Input Summary
+        run: |
+          echo "=== Deployment Summary ==="
+          echo "🎯 Target Environment: ${{ github.event.inputs.environment }}"
+          echo "📦 Version: ${{ github.event.inputs.version }}"
+          echo "🧪 Skip Tests: ${{ github.event.inputs.skip_tests }}"
+          echo "🚀 Strategy: ${{ github.event.inputs.strategy }}"
+          echo "📢 Notification Channel: ${{ github.event.inputs.notification_channel }}"
+          echo "👤 Triggered by: ${{ github.actor }}"
+          echo "⏰ Deployment Time: $(date)"
+
+      - name: Production Environment Validation
+        if: github.event.inputs.environment == 'production'
+        run: |
+          echo "⚠️  PRODUCTION DEPLOYMENT WARNING ⚠️"
+          echo "You are about to deploy to PRODUCTION environment"
+          echo "Please ensure:"
+          echo "- Code has been thoroughly tested"
+          echo "- Stakeholders have been notified"
+          echo "- Rollback plan is ready"
+
+      - name: Staging Environment Validation
+        if: github.event.inputs.environment == 'staging'
+        run: |
+          echo "ℹ️  STAGING DEPLOYMENT INFO"
+          echo "Deploying to staging environment for testing"
+          echo "This deployment will be available for QA validation"
+
+      - name: Development Environment Validation
+        if: github.event.inputs.environment == 'development'
+        run: |
+          echo "🛠️  DEVELOPMENT DEPLOYMENT DEBUG"
+          echo "Deploying to development environment"
+          echo "This is for development and testing purposes"
+
+      - name: Version Validation
+        run: |
+          echo "=== Version Validation ==="
+          echo "Deploying version: ${{ github.event.inputs.version }}"
+          if [[ "${{ github.event.inputs.version }}" == "latest" ]]; then
+            echo "⚠️  Using latest version - consider using specific version tags"
+          else
+            echo "✅ Using specific version: ${{ github.event.inputs.version }}"
+          fi
+
+  deploy:
+    needs: validate-inputs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pre-deployment Checks
+        run: |
+          echo "=== Pre-deployment Checks ==="
+          echo "Environment: ${{ github.event.inputs.environment }}"
+          echo "Version: ${{ github.event.inputs.version }}"
+          echo "Strategy: ${{ github.event.inputs.strategy }}"
+          echo "Tests will be skipped: ${{ github.event.inputs.skip_tests }}"
+
+      - name: Run Tests
+        if: github.event.inputs.skip_tests == 'false'
+        run: |
+          echo "🧪 Running tests for version ${{ github.event.inputs.version }}..."
+          echo "Running unit tests..."
+          sleep 2
+          echo "Running integration tests..."
+          sleep 2
+          echo "✅ All tests passed!"
+
+      - name: Production Deployment
+        if: github.event.inputs.environment == 'production'
+        run: |
+          echo "🚀 PRODUCTION DEPLOYMENT STARTING"
+          echo "Environment: Production"
+          echo "Version: ${{ github.event.inputs.version }}"
+          echo "Strategy: ${{ github.event.inputs.strategy }}"
+          echo "Implementing additional production safeguards..."
+          echo "✅ Production deployment completed successfully"
+
+      - name: Staging Deployment
+        if: github.event.inputs.environment == 'staging'
+        run: |
+          echo "🚀 STAGING DEPLOYMENT STARTING"
+          echo "Environment: Staging"
+          echo "Version: ${{ github.event.inputs.version }}"
+          echo "Strategy: ${{ github.event.inputs.strategy }}"
+          echo "Deploying to staging servers..."
+          echo "✅ Staging deployment completed successfully"
+
+      - name: Development Deployment
+        if: github.event.inputs.environment == 'development'
+        run: |
+          echo "🚀 DEVELOPMENT DEPLOYMENT STARTING"
+          echo "Environment: Development"
+          echo "Version: ${{ github.event.inputs.version }}"
+          echo "Strategy: ${{ github.event.inputs.strategy }}"
+          echo "Deploying to development servers..."
+          echo "✅ Development deployment completed successfully"
+
+      - name: Strategy-Based Deployment Details
+        run: |
+          echo "=== Deploying with ${{ github.event.inputs.strategy }} strategy ==="
+          case "${{ github.event.inputs.strategy }}" in
+            "rolling")
+              echo "🔄 Rolling deployment: Gradually updating instances"
+              echo "- Zero downtime deployment"
+              echo "- Instances updated one by one"
+              ;;
+            "blue-green")
+              echo "🔵🟢 Blue-Green deployment: Switching traffic"
+              echo "- New version deployed to green environment"
+              echo "- Traffic switched from blue to green"
+              ;;
+            "canary")
+              echo "🐤 Canary deployment: Gradual traffic shift"
+              echo "- Small percentage of traffic to new version"
+              echo "- Monitoring metrics before full rollout"
+              ;;
+          esac
+
+  notify:
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: always()  # Run even if deployment fails
+    steps:
+      - name: Deployment Status Check
+        run: |
+          echo "=== Deployment Status ==="
+          echo "Environment: ${{ github.event.inputs.environment }}"
+          echo "Version: ${{ github.event.inputs.version }}"
+          if [[ "${{ needs.deploy.result }}" == "success" ]]; then
+            echo "Status: ✅ SUCCESS"
+          else
+            echo "Status: ❌ FAILED"
+          fi
+
+      - name: Success Notification
+        if: needs.deploy.result == 'success'
+        run: |
+          echo "🎉 DEPLOYMENT SUCCESS NOTIFICATION"
+          echo "✅ Successfully deployed ${{ github.event.inputs.version }} to ${{ github.event.inputs.environment }}"
+          echo "🚀 Strategy used: ${{ github.event.inputs.strategy }}"
+          echo "👤 Deployed by: ${{ github.actor }}"
+          echo "⏰ Completed at: $(date)"
+
+      - name: Failure Notification
+        if: needs.deploy.result != 'success'
+        run: |
+          echo "🚨 DEPLOYMENT FAILURE NOTIFICATION"
+          echo "❌ Failed to deploy ${{ github.event.inputs.version }} to ${{ github.event.inputs.environment }}"
+          echo "🔍 Please check the deployment logs for details"
+          echo "📋 Troubleshooting steps:"
+          echo "  1. Review the deployment logs above"
+          echo "  2. Check application health endpoints"
+          echo "  3. Consider rollback if necessary"
+          echo "  4. Contact the development team"
+
+      - name: Send Channel Notification
+        run: |
+          echo "📢 Sending notification to: ${{ github.event.inputs.notification_channel }}"
+          echo "🔗 Deployment details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          echo "📊 Workflow summary available in GitHub Actions"

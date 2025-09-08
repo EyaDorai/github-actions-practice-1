@@ -1,0 +1,102 @@
+name: Expressions & Context
+on: 
+  push:
+  workflow_dispatch:
+
+jobs:
+  context-explorer:
+    runs-on: ubuntu-latest
+    env:
+      NODE_VERSION: '18'
+      BUILD_ENV: 'development'
+      APP_NAME: 'TestApp'
+    steps:
+      - name: GitHub Context Information
+        run: |
+          echo "=== GitHub Context ==="
+          echo "Repository: ${{ github.repository }}"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Triggered by: ${{ github.actor }}"
+          echo "Event type: ${{ github.event_name }}"
+          echo "Run number: ${{ github.run_number }}"
+          echo "Workflow name: ${{ github.workflow }}"
+
+      - name: Runner Environment Information
+        run: |
+          echo "=== Runner Environment ==="
+          echo "Operating System: ${{ runner.os }}"
+          echo "Architecture: ${{ runner.arch }}"
+          echo "Runner name: ${{ runner.name }}"
+          echo "Tool cache directory: ${{ runner.tool_cache }}"
+          echo "Temporary directory: ${{ runner.temp }}"
+
+      - name: Environment Variables Test
+        run: |
+          echo "=== Environment Variables ==="
+          echo "Node version from env: ${{ env.NODE_VERSION }}"
+          echo "Build environment: ${{ env.BUILD_ENV }}"
+          echo "Application name: ${{ env.APP_NAME }}"
+          echo "System PATH exists: ${{ env.PATH != '' }}"
+          echo "Home directory: ${{ env.HOME }}"
+
+      - name: Secrets Context Test
+        env:
+          TEST_API_KEY: ${{ secrets.TEST_API_KEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          echo "=== Secrets Availability Check ==="
+          echo "Has TEST_API_KEY secret: ${{ secrets.TEST_API_KEY != '' }}"
+          echo "Has DATABASE_URL secret: ${{ secrets.DATABASE_URL != '' }}"
+          echo "API key configured: ${{ secrets.TEST_API_KEY != '' && 'YES' || 'NO' }}"
+          echo "Database URL starts with 'postgresql': ${{ startsWith(secrets.DATABASE_URL, 'postgresql') }}"
+
+  logic-operations:
+    needs: context-explorer
+    runs-on: ubuntu-latest
+    steps:
+      # Branch-based Conditional Steps
+      - name: Main Branch Detection
+        if: github.ref_name == 'main'
+        run: echo "This is the main branch - Production mode"
+
+      - name: Feature Branch Detection
+        if: startsWith(github.ref_name, 'feature/')
+        run: echo "This is a feature branch - Development mode"
+
+      - name: Other Branch Detection
+        if: github.ref_name != 'main' && !startsWith(github.ref_name, 'feature/')
+        run: echo "This is another type of branch - Testing mode"
+
+      # Operating System Conditional Steps
+      - name: Linux Operations
+        if: runner.os == 'Linux'
+        run: |
+          echo "🐧 Running on Linux - using apt package manager"
+          echo "Linux runner detected: ${{ runner.os }}"
+
+      - name: macOS Operations
+        if: runner.os == 'macOS'
+        run: |
+          echo "🍎 Running on macOS - using homebrew package manager"
+          echo "macOS runner detected: ${{ runner.os }}"
+
+      - name: Windows Operations
+        if: runner.os == 'Windows'
+        run: |
+          echo "🪟 Running on Windows - using chocolatey package manager"
+          echo "Windows runner detected: ${{ runner.os }}"
+
+      - name: String Manipulation Functions
+        run: |
+          echo "=== String Transformations ==="
+          echo "Original ref: ${{ github.ref }}"
+          echo "Clean branch name: ${{ replace(github.ref, 'refs/heads/', '') }}"
+          echo "Uppercase branch: ${{ upper(github.ref_name) }}"
+          echo "Lowercase branch: ${{ lower(github.ref_name) }}"
+          echo "Branch contains 'main': ${{ contains(github.ref_name, 'main') }}"
+          echo "Branch starts with 'feature': ${{ startsWith(github.ref_name, 'feature/') }}"
+          
+          echo "=== Conditional Logic ==="
+          echo "Environment type: ${{ github.ref_name == 'main' && 'production' || 'development' }}"
+          echo "Runner type: ${{ runner.os == 'Linux' && 'unix' || 'other' }}"
+          echo "Branch category: ${{ startsWith(github.ref_name, 'feature/') && 'feature' || 'stable' }}"

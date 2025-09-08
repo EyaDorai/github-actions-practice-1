@@ -1,37 +1,44 @@
-name: GitHub Actions Basics
-on: [push, workflow_dispatch]  # Triggers: push or manual
+name: Practice 1 - GitHub Actions Basics
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
 
 jobs:
   hello-job:
+    name: Say Hello
     runs-on: ubuntu-latest
     steps:
-      - name: Say hello
+      - name: Simple greeting
         run: echo "Hello, GitHub Actions!"
 
-      - name: Show date
+      - name: Show current date
         run: date
 
-      - name: List files
+      - name: List current directory
         run: ls -la
 
   system-job:
+    name: Check System
     runs-on: ubuntu-latest
     steps:
-      - name: Show system info
+      - name: Show system information
         run: |
           echo "=== System Info ==="
           echo "Operating System: $(uname -s)"
           echo "Current User: $(whoami)"
           echo "Working Directory: $(pwd)"
 
-      - name: Create test file
+      - name: Create a simple file
         run: |
           echo "This is a test file" > test.txt
           cat test.txt
 
   summary-job:
-    needs: [hello-job, system-job]  # Waits for both jobs
+    name: Summary Report
     runs-on: ubuntu-latest
+    needs: [hello-job, system-job]
     steps:
       - name: Wait message
         run: echo "Both previous jobs completed successfully!"
