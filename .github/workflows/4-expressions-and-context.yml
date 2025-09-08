@@ -1,5 +1,6 @@
 name: Expressions & Context
-on: 
+
+on:
   push:
   workflow_dispatch:
 
@@ -67,25 +68,26 @@ jobs:
         if: github.ref_name != 'main' && !startsWith(github.ref_name, 'feature/')
         run: echo "This is another type of branch - Testing mode"
 
-      # Operating System Conditional Steps
-      - name: Linux Operations
+      # OS Conditional Steps
+      - name: Linux Only
         if: runner.os == 'Linux'
         run: |
-          echo "🐧 Running on Linux - using apt package manager"
+          echo "Running on Linux - using apt package manager"
           echo "Linux runner detected: ${{ runner.os }}"
 
-      - name: macOS Operations
+      - name: macOS Only
         if: runner.os == 'macOS'
         run: |
-          echo "🍎 Running on macOS - using homebrew package manager"
+          echo "Running on macOS - using homebrew package manager"
           echo "macOS runner detected: ${{ runner.os }}"
 
-      - name: Windows Operations
+      - name: Windows Only
         if: runner.os == 'Windows'
         run: |
-          echo "🪟 Running on Windows - using chocolatey package manager"
+          echo "Running on Windows - using chocolatey package manager"
           echo "Windows runner detected: ${{ runner.os }}"
 
+      # String Manipulation Functions
       - name: String Manipulation Functions
         run: |
           echo "=== String Transformations ==="
@@ -95,7 +97,7 @@ jobs:
           echo "Lowercase branch: ${{ lower(github.ref_name) }}"
           echo "Branch contains 'main': ${{ contains(github.ref_name, 'main') }}"
           echo "Branch starts with 'feature': ${{ startsWith(github.ref_name, 'feature/') }}"
-          
+
           echo "=== Conditional Logic ==="
           echo "Environment type: ${{ github.ref_name == 'main' && 'production' || 'development' }}"
           echo "Runner type: ${{ runner.os == 'Linux' && 'unix' || 'other' }}"
